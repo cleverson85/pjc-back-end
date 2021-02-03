@@ -1,5 +1,19 @@
 #!/bin/sh
 
+: ${HOST:=db}
+: ${PORT:=5432}
+: ${POSTGRES_DB:=PJC}
+: ${POSTGRES_USER:=postgres}
+: ${POSTGRES_PASSWORD:=docker}
+
+until nc -z $HOST $PORT
+do
+    echo "Waiting for PSQL ($HOST:$PORT) to start..."
+    sleep 0.5
+done
+  
+echo "Start entrypoint - RUNTIME"
+
 CONTAINER_ALREADY_STARTED="CONTAINER_ALREADY_STARTED_PLACEHOLDER"
 
 if [ ! -e $CONTAINER_ALREADY_STARTED ]; then

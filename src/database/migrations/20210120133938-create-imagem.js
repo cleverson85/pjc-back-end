@@ -1,5 +1,5 @@
 module.exports = {
-  up: (queryInterface, Sequelize) => queryInterface.createTable('Album', {
+  up: (queryInterface, Sequelize) => queryInterface.createTable('Imagem', {
     id: {
       type: Sequelize.INTEGER,
       allowNull: false,
@@ -10,6 +10,10 @@ module.exports = {
       type: Sequelize.STRING,
       allowNull: false,
     },
+    url: {
+      type: Sequelize.STRING(1000),
+      allowNull: true,
+    },
     createdAt: {
       type: Sequelize.DATE,
       allowNull: false,
@@ -19,6 +23,5 @@ module.exports = {
       allowNull: false,
     },
   }),
-
-  down: (queryInterface) => queryInterface.dropTable('Album'),
+  down: (queryInterface) => queryInterface.dropTable('Imagem'),
 };

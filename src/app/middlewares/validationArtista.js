@@ -8,11 +8,11 @@ export default async (req, res, next) => {
     });
 
     if (!(await schema.isValid(req.body))) {
-      return res.send({ status: 401, message: 'Nome do artista deve ser informado.' });
+      return res.status(401).json({ message: 'Nome do artista deve ser informado.' });
     }
 
     return next();
   } catch (e) {
-    return res.send({ status: 401, message: e.message });
+    return res.status(401).json({ message: e.message });
   }
 };

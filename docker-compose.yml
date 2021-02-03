@@ -1,14 +1,24 @@
 version: '3.6'
 
 services:
+  api:
+    build: 
+      context: .
+    container_name: api
+    depends_on:
+      - db
+    ports:
+      - 5555:5555
+    networks:
+      - backend 
+
   db:
     image: postgres:13-alpine
-    restart: always
-    container_name: postgres-artista
+    container_name: postgres-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: docker
-      POSTGRES_DB: PJC
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - 5432:5432
     networks:
@@ -16,31 +26,21 @@ services:
     volumes:
       - ./.docker/db-data:/var/lib/postgresql/data
 
-  api:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    container_name: artista-api
-    depends_on:
-      - db
-    ports:
-      - 5555:5555
-    networks:
-      - backend
-  
   minio:
     image: minio/minio
-    container_name: minio-artista
+    container_name: minio
+    depends_on:
+      - db
     environment:
-      MINIO_BUCKET: album-artista-pjc
-      MINIO_ENDPOINT: play.min.io
-      MINIO_ACCESS_KEY: Q3AM3UQ867SPQQA43P2F
-      MINIO_SECRET_KEY: zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     ports:
       - "9000:9000"
+    networks:
+      - backend
     volumes:
       - ./storage/minio:/data
-    command: server --address 0.0.0.0:9000 /data      
+    command: server /data     
 
 networks:
   backend:

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import randtoken from 'rand-token';
 
 import Usuario from '../models/Usuario';
 import auth from '../../config/authConfig';
@@ -8,26 +9,30 @@ class SessionController {
     try {
       const { email, senha } = req.body;
 
-      const userExists = await Usuario.findOne({
+      const user = await Usuario.findOne({
         where: { email },
       });
 
-      if (!userExists) {
-        return res.send({ status: 401, message: 'Usuário ou senha inválidos.' });
+      if (!user) {
+        return res.status(401).json({ message: 'Usuário ou senha inválidos.' });
       }
 
-      if (!(await userExists.checkPassword(senha))) {
-        return res.send({ status: 401, message: 'Usuário ou senha inválidos.' });
+      if (!(await user.checkPassword(senha))) {
+        return res.status(401).json({ message: 'Usuário ou senha inválidos.' });
       }
 
-      const { id, name } = userExists;
+      const { id, nome } = user;
+      const refreshToken = randtoken.uid(256);
+
+      await user.update({ refreshToken });
 
       return res.json({
-        user: { id, name, email },
+        user: { id, nome, email },
         autenticado: true,
-        token: jwt.sign({ id }, auth.secret, {
+        token: jwt.sign({ email }, auth.secret, {
           expiresIn: auth.expiresIn,
         }),
+        refreshToken,
       });
     } catch (e) {
       return res.status(401).json({ error: e.message });

@@ -1,47 +1,50 @@
-import Minio from 'minio';
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
+import Imagem from '../models/Imagem';
+import minioClient from '../../config/minio';
+import minioUtil from '../util/minioUtil';
+
+require('dotenv').config();
 
 class FileController {
   async store(req, res) {
     try {
-      const minioClient = new Minio.Client({
-        endPoint: 'play.min.io',
-        port: 9000,
-        useSSL: true,
-        accessKey: 'Q3AM3UQ867SPQQA43P2F',
-        secretKey: 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG',
-      });
+      const { files } = req;
+      const { id, artista } = req.body;
+      const bucket = process.env.MINIO_BUCKET;
 
-      const { data, id } = req.body;
+      const exists = await minioClient.bucketExists(bucket);
 
-      minioClient.makeBucket('album-artista-pjc', 'us-east-1', (err) => {
-        if (err) {
-          return console.log(err.message);
-        }
+      if (!exists) {
+        await minioClient.makeBucket(bucket, 'us-east-1').then(() => { console.log('Bucket criado!!!!'); });
+      }
 
-        console.log('Bucket criado com sucesso.');
-      });
+      for (const file of files) {
+        await minioUtil.putObject(artista, file);
+        await await Imagem.create(
+          {
+            artistaId: id,
+            nome: `${Math.floor(Math.random() * 100000)}${file.originalname}`,
+          },
+        );
+      }
 
-      minioClient.putObject('album-artista-pjc', req.file.originalname, Buffer.from(req.file.buffer, 'binary'), { 'Content-Type': req.file.mime }, (err, etag) => {
-        if (err) {
-          return console.log(err);
-        }
-
-        // const filePath = `${bucket}/${path}${req.file.hash}${file.ext}`;
-        // let hostPart = `${minioClient.protocol}//${minioClient.host}:${minioClient.port}`;
-
-        // // const http = useSSL ? 'https' : 'http';
-        // hostPart = `http://${host}`;
-
-        // req.file.url = `${hostPart}/${filePath}`;
-
-        // console.log('File uploaded successfully.');
-
-        // return file.url;
-      });
-
-      return res.json('Arquivo criado!');
+      return res.status(200).json('Arquivo criado!');
     } catch (e) {
-      return res.status().send({ status: 401, message: 'Ocorreu um erro, entre em contato com a central.' });
+      return res.status(401).send({ message: 'Ocorreu um erro.', error: e.stack });
+    }
+  }
+
+  async delete(req, res) {
+    try {
+      for (const file of req.body) {
+        await minioUtil.removeObject(file.nome);
+        await Imagem.destroy({ where: { id: file.id } });
+      }
+
+      return res.status(200).json('Arquivos excluídos!');
+    } catch (e) {
+      return res.status(401).send({ message: 'Ocorreu um erro.', error: e.stack });
     }
   }
 }

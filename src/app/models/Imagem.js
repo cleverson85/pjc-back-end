@@ -1,9 +1,10 @@
 import Sequelize, { Model } from 'sequelize';
 
-class Album extends Model {
+class Imagem extends Model {
   static init(sequelize) {
     super.init({
       nome: Sequelize.STRING,
+      url: Sequelize.STRING,
     }, {
       sequelize,
     });
@@ -12,4 +13,4 @@ class Album extends Model {
   }
 }
 
-export default Album;
+export default Imagem;

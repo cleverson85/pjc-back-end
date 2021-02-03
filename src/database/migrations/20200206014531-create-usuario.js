@@ -15,15 +15,19 @@ module.exports = {
       allowNull: false,
       unique: true,
     },
-    password_hash: {
+    passwordHash: {
       type: Sequelize.STRING,
       allowNull: false,
     },
-    created_at: {
+    refreshToken: {
+      type: Sequelize.STRING(1000),
+      allowNull: true,
+    },
+    createdAt: {
       type: Sequelize.DATE,
       allowNull: false,
     },
-    updated_at: {
+    updatedAt: {
       type: Sequelize.DATE,
       allowNull: false,
     },

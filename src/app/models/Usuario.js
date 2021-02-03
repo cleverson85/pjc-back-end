@@ -7,7 +7,8 @@ class Usuario extends Model {
       {
         nome: Sequelize.STRING,
         email: Sequelize.STRING,
-        password_hash: Sequelize.STRING,
+        passwordHash: Sequelize.STRING,
+        refreshToken: Sequelize.STRING,
       },
       {
         sequelize,
@@ -18,7 +19,7 @@ class Usuario extends Model {
   }
 
   checkPassword(password) {
-    return bcrypt.compare(password, this.password_hash);
+    return bcrypt.compare(password, this.passwordHash);
   }
 }
 

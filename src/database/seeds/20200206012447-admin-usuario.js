@@ -7,9 +7,10 @@ module.exports = {
       {
         nome: 'Usuário Admin',
         email: 'usuario@admin.com.br',
-        password_hash: bcrypt.hashSync('123456', 8),
-        created_at: new Date(),
-        updated_at: new Date(),
+        passwordHash: bcrypt.hashSync('123456', 8),
+        refreshToken: ' ',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ],
     {},
