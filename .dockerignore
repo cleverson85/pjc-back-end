@@ -1,4 +1,5 @@
 /node_modules
+storage
 npm-debug.log
 temp/uploads/*
 .gitignore

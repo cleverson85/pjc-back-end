@@ -21,10 +21,10 @@ class FileController {
 
       for (const file of files) {
         await minioUtil.putObject(artista, file);
-        await await Imagem.create(
+        await Imagem.create(
           {
             artistaId: id,
-            nome: `${Math.floor(Math.random() * 100000)}${file.originalname}`,
+            nome: `${artista}_${file.originalname}`,
           },
         );
       }

@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable-next-line no-await-in-loop */
@@ -7,7 +8,7 @@ import Artista from '../models/Artista';
 import Album from '../models/Album';
 import Imagem from '../models/Imagem';
 
-import minioClient from '../util/minioUtil';
+import minioUtil from '../util/minioUtil';
 
 require('dotenv').config();
 
@@ -106,34 +107,55 @@ class ArtistaController {
 
   async list(req, res) {
     try {
-      const { nome } = req.query;
+      const {
+        nome, order, page = 1, value,
+      } = req.query;
+      const limit = 10;
+      const offset = (page - 1) * limit;
 
-      const model = await Artista.findAll({
-        where: (nome !== undefined ? { nome: { [Op.iLike]: `%${nome}%` } } : { id: { [Op.gt]: 0 } }),
-        // order: [order === 'A' || !order ? 'ASC' : 'DESC'],
-        order: ['nome'],
-        include: [
-          {
-            model: Album,
-            as: 'albuns',
-            attributes: ['artistaId', 'nome'],
-          },
-          {
-            model: Imagem,
-            as: 'imagens',
-            attributes: ['id', 'artistaId', 'nome', 'url'],
-          },
-        ],
-      });
+      const [total, artistas] = await Promise.all([
+        Artista.findAll({
+          where: (nome !== undefined && value !== 'B' ? { nome: { [Op.iLike]: `%${nome}%` } } : { id: { [Op.gt]: 0 } }),
+          include: [
+            {
+              model: Album,
+              where: (value !== 'A' ? { nome: { [Op.iLike]: `%${nome}%` } } : { id: { [Op.gt]: 0 } }),
+              as: 'albuns',
+              attributes: ['artistaId', 'nome'],
+            },
+          ],
+        }),
+        Artista.findAndCountAll({
+          where: (nome !== undefined && value !== 'B' ? { nome: { [Op.iLike]: `%${nome}%` } } : { id: { [Op.gt]: 0 } }),
+          order: [order !== 'A' ? ['nome', 'DESC'] : ['nome', 'ASC']],
+          limit,
+          offset,
+          include: [
+            {
+              model: Album,
+              where: (value !== 'A' ? { nome: { [Op.iLike]: `%${nome}%` } } : { id: { [Op.gt]: 0 } }),
+              as: 'albuns',
+              attributes: ['artistaId', 'nome'],
+            },
+            {
+              model: Imagem,
+              as: 'imagens',
+              attributes: ['id', 'artistaId', 'nome', 'url'],
+            },
+          ],
+        }),
+      ]);
+
+      const model = artistas.rows;
 
       for (const item of model) {
         const { imagens } = item;
         for (const img of imagens) {
-          img.url = await minioClient.presignedUrl(img.nome);
+          img.url = await minioUtil.presignedUrl(img.nome);
         }
       }
 
-      return res.json(model);
+      res.json({ total, model });
     } catch (e) {
       return res.status(401).json({ message: e.message });
     }
@@ -153,27 +175,10 @@ class ArtistaController {
         },
       });
 
-      const artistas = await Artista.findAll({
-        order: ['nome'],
-        include: [
-          {
-            model: Album,
-            as: 'albuns',
-            attributes: ['artistaId', 'nome'],
-          },
-          {
-            model: Imagem,
-            as: 'imagens',
-            attributes: ['artistaId', 'nome', 'url'],
-          },
-        ],
-      });
-
       return res
         .status(200)
         .json({
           message: 'Artista excluído com sucesso!',
-          artistas,
         });
     } catch (e) {
       return res.status(401).json({ message: e.message });
